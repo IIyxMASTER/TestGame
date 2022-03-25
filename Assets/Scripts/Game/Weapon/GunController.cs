@@ -5,6 +5,7 @@ namespace Game.Weapon
 {
     public class GunController : MonoBehaviour
     {
+        [SerializeField] private Animator gunAnimator;
         public FP_Input playerInput;
 
         public float shootRate = 0.15F;
@@ -24,6 +25,8 @@ namespace Game.Weapon
         private bool reload;
         public KeyCode shootKey = KeyCode.Mouse0;
         public KeyCode reloadKey = KeyCode.R;
+        private static readonly int ReloadProperty = Animator.StringToHash("Reload");
+        private static readonly int ShotProperty = Animator.StringToHash("Shot");
 
         void Update()
         {
@@ -53,6 +56,7 @@ namespace Game.Weapon
             if (ammoCount > 0)
             {
                 Debug.Log("Shoot");
+                gunAnimator.SetTrigger(ShotProperty);
                 ammoCount--;
             }
             else
@@ -65,6 +69,7 @@ namespace Game.Weapon
         {
             reloading = true;
             Debug.Log("Reloading");
+            gunAnimator.SetTrigger(ReloadProperty);
             yield return new WaitForSeconds(reloadTime);
             ammoCount = ammo;
             Debug.Log("Reloading Complete");
