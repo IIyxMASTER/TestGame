@@ -8,10 +8,26 @@ namespace Game.Weapon
         [SerializeField] private Animator gunAnimator;
         public FP_Input playerInput;
 
+        public GameObject muzzlePrefab;
+        public GameObject muzzlePosition;
+
+        public AudioClip GunShotClip;
+        public AudioSource source;
+        public Vector2 audioPitch = new Vector2(.9f, 1.1f);
+
         public float shootRate = 0.15F;
         public float reloadTime = 1.0F;
         public int ammoCount = 15;
 
+        private bool shoot;
+        private bool reload;
+        public KeyCode shootKey = KeyCode.Mouse0;
+        public KeyCode reloadKey = KeyCode.R;
+
+        private static readonly int ReloadProperty = Animator.StringToHash("Reload");
+        private static readonly int ShotProperty = Animator.StringToHash("Shot");
+        public GameObject projectilePrefab;
+        
         private int ammo;
         private float delay;
         private bool reloading;
@@ -21,12 +37,6 @@ namespace Game.Weapon
             ammo = ammoCount;
         }
 
-        private bool shoot;
-        private bool reload;
-        public KeyCode shootKey = KeyCode.Mouse0;
-        public KeyCode reloadKey = KeyCode.R;
-        private static readonly int ReloadProperty = Animator.StringToHash("Reload");
-        private static readonly int ShotProperty = Animator.StringToHash("Shot");
 
         void Update()
         {
@@ -57,6 +67,36 @@ namespace Game.Weapon
             {
                 Debug.Log("Shoot");
                 gunAnimator.SetTrigger(ShotProperty);
+                var flash = Instantiate(muzzlePrefab, muzzlePosition.transform);
+
+                // --- Shoot Projectile Object ---
+                if (projectilePrefab != null)
+                {
+                    GameObject newProjectile = Instantiate(projectilePrefab, muzzlePosition.transform.position,
+                        muzzlePosition.transform.rotation, transform);
+                }
+
+                if (source != null)
+                {
+                    if (source.transform.IsChildOf(transform))
+                    {
+                        source.Play();
+                    }
+                    else
+                    {
+                        AudioSource newAS = Instantiate(source);
+                        if ((newAS = Instantiate(source)) != null && newAS.outputAudioMixerGroup != null &&
+                            newAS.outputAudioMixerGroup.audioMixer != null)
+                        {
+                            newAS.outputAudioMixerGroup.audioMixer.SetFloat("Pitch",
+                                Random.Range(audioPitch.x, audioPitch.y));
+                            newAS.pitch = Random.Range(audioPitch.x, audioPitch.y);
+                            newAS.PlayOneShot(GunShotClip);
+                            Destroy(newAS.gameObject, 4);
+                        }
+                    }
+                }
+
                 ammoCount--;
             }
             else
