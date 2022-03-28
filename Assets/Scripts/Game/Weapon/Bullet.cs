@@ -13,7 +13,7 @@ namespace Game.Weapon
         [Inject] private ColorController _colorController;
         private IMemoryPool _pool;
         private IEnumerator destroyCoroutine;
-
+        private bool isDestroyed = false;
         public void Shot(Vector3 velocity, float lifeTime)
         {
             var direction = transform.TransformDirection(velocity);
@@ -60,6 +60,7 @@ namespace Game.Weapon
         public void OnSpawned(Vector3 position, Quaternion rotation, Transform parent, IMemoryPool pool)
         {
             _pool = pool;
+            isDestroyed = false;
             transform.SetParent(parent);
             transform.position = position;
             transform.rotation = rotation;
@@ -67,11 +68,14 @@ namespace Game.Weapon
 
         public void Dispose()
         {
+            if(isDestroyed)
+                return;
             if(destroyCoroutine != null)
                 StopCoroutine(destroyCoroutine);
             destroyCoroutine = null;
             _rigidbody.velocity = Vector3.zero;
             _pool.Despawn(this);
+            isDestroyed = true;
         }
 
         public class Factory : PlaceholderFactory<Vector3, Quaternion, Transform, Bullet>

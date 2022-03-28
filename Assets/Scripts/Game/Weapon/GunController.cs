@@ -12,7 +12,7 @@ namespace Game.Weapon
     {
         [SerializeField] private Animator gunAnimator;
         [SerializeField] private  FP_Input playerInput;
-
+        [SerializeField] private Transform spawnPoint;
         [Inject]private Bullet.Factory bulletFactory;
         [SerializeField] private float _bulletLifeTime = 5f;
         [SerializeField] private float _bulletPower;
@@ -99,7 +99,7 @@ namespace Game.Weapon
 
                 if (projectilePrefab != null)
                 {
-                    var bullet = bulletFactory.Create(transform.position,
+                    var bullet = bulletFactory.Create(spawnPoint.position,
                         muzzlePosition.transform.rotation, transform);
                     bullet.Shot(Vector3.right * _bulletPower, _bulletLifeTime);
                 }
