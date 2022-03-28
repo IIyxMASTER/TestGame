@@ -1,5 +1,8 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using Lean.Common;
 using UnityEngine;
+using Zenject;
 using static Lean.Pool.LeanPool;
 
 namespace Game.Weapon
@@ -7,31 +10,38 @@ namespace Game.Weapon
     public class GunController : MonoBehaviour
     {
         [SerializeField] private Animator gunAnimator;
-        public FP_Input playerInput;
+        [SerializeField] private  FP_Input playerInput;
 
-        public GameObject muzzlePrefab;
-        public GameObject muzzlePosition;
+        [Inject]private Bullet.Factory bulletFactory;
+        [SerializeField] private float _bulletLifeTime = 5f;
+        [SerializeField] private float _bulletPower;
+        [SerializeField] private float _rotationStep;
+        [SerializeField] private  GameObject target;
+        [SerializeField] private  GameObject muzzlePrefab;
+        [SerializeField] private  GameObject muzzlePosition;
 
-        public AudioClip GunShotClip;
-        public AudioSource source;
-        public Vector2 audioPitch = new Vector2(.9f, 1.1f);
+        [SerializeField] private  AudioClip GunShotClip;
+        [SerializeField] private  AudioSource source;
+        [SerializeField] private  Vector2 audioPitch = new Vector2(.9f, 1.1f);
 
-        public float shootRate = 0.15F;
-        public float reloadTime = 1.0F;
-        public int ammoCount = 15;
-
+        [SerializeField] private  float shootRate = 0.15F;
+        [SerializeField] private  float reloadTime = 1.0F;
+        [SerializeField] private  int ammoCount = 15;
+        public int AmmoCount => ammoCount;
+        
         private bool shoot;
         private bool reload;
-        public KeyCode shootKey = KeyCode.Mouse0;
-        public KeyCode reloadKey = KeyCode.R;
+        [SerializeField] private  KeyCode shootKey = KeyCode.Mouse0;
+        [SerializeField] private  KeyCode reloadKey = KeyCode.R;
 
         private static readonly int ReloadProperty = Animator.StringToHash("Reload");
         private static readonly int ShotProperty = Animator.StringToHash("Shot");
-        public GameObject projectilePrefab;
+        [SerializeField] private  GameObject projectilePrefab;
         
         private int ammo;
         private float delay;
         private bool reloading;
+
 
         void Start()
         {
@@ -60,6 +70,19 @@ namespace Game.Weapon
             if (reload)
                 if (!reloading && ammoCount < ammo)
                     StartCoroutine("Reload");
+            if(Physics.Linecast(transform.parent.position,target.transform.position, out RaycastHit hitInfo))
+            {
+                LookAt(hitInfo.point);
+            }
+            
+        }
+
+        void LookAt(Vector3 targetPos)
+        {
+            Vector3 relativePos = targetPos - transform.position;
+            Quaternion targetRotation = Quaternion.LookRotation(relativePos, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationStep * Time.deltaTime);
+            
         }
 
         void Shoot()
@@ -68,13 +91,13 @@ namespace Game.Weapon
             {
                 Debug.Log("Shoot");
                 gunAnimator.SetTrigger(ShotProperty);
-                var flash = Instantiate(muzzlePrefab, muzzlePosition.transform);
+                var flash = Spawn(muzzlePrefab, muzzlePosition.transform);
 
-                // --- Shoot Projectile Object ---
                 if (projectilePrefab != null)
                 {
-                    GameObject newProjectile = Spawn(projectilePrefab, muzzlePosition.transform.position,
+                    var bullet = bulletFactory.Create(muzzlePosition.transform.position,
                         muzzlePosition.transform.rotation, transform);
+                    bullet.Shot(Vector3.right * _bulletPower, _bulletLifeTime);
                 }
 
                 if (source != null)
@@ -117,9 +140,6 @@ namespace Game.Weapon
             reloading = false;
         }
 
-        void OnGUI()
-        {
-            GUILayout.Label("AMMO: " + ammoCount);
-        }
+        
     }
 }
