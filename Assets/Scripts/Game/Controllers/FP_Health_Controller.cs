@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Game.Controllers
 {
@@ -15,5 +16,13 @@ namespace Game.Controllers
             currentHealth = maxHealth;
         }
 
+        public void Damage(int attackDamage)
+        {
+            currentHealth -= attackDamage;
+            if (currentHealth <= 0)
+            {
+                SceneManager.LoadScene("main");
+            }
+        }
     }
 }

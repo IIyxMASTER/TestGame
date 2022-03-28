@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Lean.Common;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Zenject;
 using static Lean.Pool.LeanPool;
 
@@ -21,7 +22,8 @@ namespace Game.Weapon
         [SerializeField] private  GameObject muzzlePosition;
 
         [SerializeField] private  AudioClip GunShotClip;
-        [SerializeField] private  AudioSource source;
+        [FormerlySerializedAs("source")] [SerializeField] private  AudioSource shootSource;
+        [FormerlySerializedAs("source")] [SerializeField] private  AudioSource reloadSource;
         [SerializeField] private  Vector2 audioPitch = new Vector2(.9f, 1.1f);
 
         [SerializeField] private  float shootRate = 0.15F;
@@ -72,7 +74,10 @@ namespace Game.Weapon
                     StartCoroutine("Reload");
             if(Physics.Linecast(transform.parent.position,target.transform.position, out RaycastHit hitInfo))
             {
-                LookAt(hitInfo.point);
+                var distance = Vector3.Distance(hitInfo.point, transform.position);
+                var minDistance = 4;
+                
+                LookAt(distance > minDistance ? hitInfo.point : target.transform.position);
             }
             
         }
@@ -89,27 +94,26 @@ namespace Game.Weapon
         {
             if (ammoCount > 0)
             {
-                Debug.Log("Shoot");
                 gunAnimator.SetTrigger(ShotProperty);
                 var flash = Spawn(muzzlePrefab, muzzlePosition.transform);
 
                 if (projectilePrefab != null)
                 {
-                    var bullet = bulletFactory.Create(muzzlePosition.transform.position,
+                    var bullet = bulletFactory.Create(transform.position,
                         muzzlePosition.transform.rotation, transform);
                     bullet.Shot(Vector3.right * _bulletPower, _bulletLifeTime);
                 }
 
-                if (source != null)
+                if (shootSource != null)
                 {
-                    if (source.transform.IsChildOf(transform))
+                    if (shootSource.transform.IsChildOf(transform))
                     {
-                        source.Play();
+                        shootSource.Play();
                     }
                     else
                     {
-                        AudioSource newAS = Spawn(source);
-                        if ((newAS = Spawn(source)) != null && newAS.outputAudioMixerGroup != null &&
+                        AudioSource newAS = Spawn(shootSource);
+                        if ((newAS = Spawn(shootSource)) != null && newAS.outputAudioMixerGroup != null &&
                             newAS.outputAudioMixerGroup.audioMixer != null)
                         {
                             newAS.outputAudioMixerGroup.audioMixer.SetFloat("Pitch",
@@ -132,11 +136,17 @@ namespace Game.Weapon
         IEnumerator Reload()
         {
             reloading = true;
-            Debug.Log("Reloading");
             gunAnimator.SetTrigger(ReloadProperty);
+            if (reloadSource != null)
+            {
+                if (reloadSource.transform.IsChildOf(transform))
+                {
+                    reloadSource.Play();
+                }
+            }
+
             yield return new WaitForSeconds(reloadTime);
             ammoCount = ammo;
-            Debug.Log("Reloading Complete");
             reloading = false;
         }
 
