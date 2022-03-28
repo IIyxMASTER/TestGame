@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using static Lean.Pool.LeanPool;
 
 namespace Game.Weapon
 {
@@ -72,7 +73,7 @@ namespace Game.Weapon
                 // --- Shoot Projectile Object ---
                 if (projectilePrefab != null)
                 {
-                    GameObject newProjectile = Instantiate(projectilePrefab, muzzlePosition.transform.position,
+                    GameObject newProjectile = Spawn(projectilePrefab, muzzlePosition.transform.position,
                         muzzlePosition.transform.rotation, transform);
                 }
 
@@ -84,15 +85,15 @@ namespace Game.Weapon
                     }
                     else
                     {
-                        AudioSource newAS = Instantiate(source);
-                        if ((newAS = Instantiate(source)) != null && newAS.outputAudioMixerGroup != null &&
+                        AudioSource newAS = Spawn(source);
+                        if ((newAS = Spawn(source)) != null && newAS.outputAudioMixerGroup != null &&
                             newAS.outputAudioMixerGroup.audioMixer != null)
                         {
                             newAS.outputAudioMixerGroup.audioMixer.SetFloat("Pitch",
                                 Random.Range(audioPitch.x, audioPitch.y));
                             newAS.pitch = Random.Range(audioPitch.x, audioPitch.y);
                             newAS.PlayOneShot(GunShotClip);
-                            Destroy(newAS.gameObject, 4);
+                            Despawn(newAS.gameObject, 4);
                         }
                     }
                 }
