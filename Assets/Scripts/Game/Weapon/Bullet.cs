@@ -45,7 +45,16 @@ namespace Game.Weapon
 
             Dispose();
         }
+        public void OnTriggerExit(Collider collider)
+        {
+            var enemyController = collider.GetComponent<EnemyController>();
+            if (enemyController != null)
+            {
+                enemyController.DamageEnemy(); 
+            }
 
+            Dispose();
+        }
         IEnumerator DestroyTimer(float lifeTime)
         {
             yield return new WaitForSeconds(lifeTime);
